@@ -43,7 +43,7 @@ export async function main(ns) {
         }
       }
     } else {
-      const threads = Math.celi(ns.hackAnalyzeThreads(target,maxmoney*0.75));
+      const threads = Math.ceil(ns.hackAnalyzeThreads(target,maxmoney*0.75));
       const hackram = ns.getScriptRam("hack.js");
       const needram = Math.ceil(hackram * threads);
       const hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer()) + 10;
