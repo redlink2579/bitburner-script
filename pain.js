@@ -21,6 +21,7 @@ export async function main(ns) {
           await ns.sleep(weakentime);
           let nowcurrentsec = ns.getServerSecurityLevel(target);
           nowcurrentsec = currentsec
+          break
         } else {
           await ns.sleep(1000)
         }
@@ -38,12 +39,13 @@ export async function main(ns) {
           await ns.sleep(growtime);
           let nowmoney = ns.getServerMoneyAvailable(target);
           nowmoney = money
+          break
         } else {
           await ns.sleep(1000)
         }
       }
     } else {
-      const threads = Math.ceil(ns.hackAnalyzeThreads(target,maxmoney*0.75));
+      const threads = Math.ceil (ns.hackAnalyzeThreads(target,maxmoney*0.75));
       const hackram = ns.getScriptRam("hack.js");
       const needram = Math.ceil(hackram * threads);
       const hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer()) + 10;
@@ -55,6 +57,7 @@ export async function main(ns) {
           await ns.sleep(hacktime);
           let nowmoney = ns.getServerMoneyAvailable(target);
           nowmoney = money
+          break
         } else {
           await ns.sleep(1000)
         }
