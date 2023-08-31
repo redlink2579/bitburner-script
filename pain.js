@@ -4,10 +4,10 @@ export async function main(ns) {
   const target = ns.args[0];
   const maxmoney = ns.getServerMaxMoney(target);
   const minsecurity = ns.getServerMinSecurityLevel(target);
-  let money = ns.getServerMoneyAvailable(target);
-  let currentsec = ns.getServerSecurityLevel(target);
 
   while (true) {
+    let money = ns.getServerMoneyAvailable(target);
+    let currentsec = ns.getServerSecurityLevel(target);
     if (currentsec > minsecurity) {
       const threads = Math.ceil((currentsec - minsecurity) / ns.weakenAnalyze(1));
       const weakenram = ns.getScriptRam("weaken.js");
@@ -18,8 +18,6 @@ export async function main(ns) {
         if (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) >= needram) {
           ns.run("weaken.js", threads, target)
           await ns.sleep(weakentime);
-          var nowcurrentsec = ns.getServerSecurityLevel(target);
-          nowcurrentsec = currentsec
           break
         } else {
           if (ns.getServerMaxRam(server) - ns.getServerUsedRam(server) >= needram) {
