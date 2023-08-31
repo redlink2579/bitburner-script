@@ -1,5 +1,4 @@
 /** @param {NS} ns */
-/** @param {NS} ns */
 export async function main(ns) {
   const host = ns.getHostname();
   const target = ns.args[0];
@@ -17,14 +16,17 @@ export async function main(ns) {
       ns.print("Need ram for weaken:" + ns.formatRam(needram))
       for (const server of ns.scan(host)) {
         if (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) >= needram) {
-          await ns.weaken(target)
+          ns.run("weaken.js", threads, target)
+          await ns.sleep(weakentime);
+          var nowcurrentsec = ns.getServerSecurityLevel(target);
+          nowcurrentsec = currentsec
           break
         } else {
           if (ns.getServerMaxRam(server) - ns.getServerUsedRam(server) >= needram) {
-            ns.scp("pain.js", server, host)
-            ns.exec("pain.js", server, threads, target)
+            ns.scp("weaken.js", server, host)
+            ns.exec("weaken.js", server, threads, target)
             await ns.sleep(weakentime);
-            let nowcurrentsec = ns.getServerSecurityLevel(target);
+            var nowcurrentsec = ns.getServerSecurityLevel(target);
             nowcurrentsec = currentsec
             break
           } else {
@@ -40,14 +42,17 @@ export async function main(ns) {
       ns.print("Need ram for grow:" + ns.formatRam(needram))
       for (const server of ns.scan(host)) {
         if (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) >= needram) {
-          await ns.grow(target)
+          ns.run("grow.js", threads, target)
+          await ns.sleep(growtime);
+          var nowmoney = ns.getServerMoneyAvailable(target);
+          nowmoney = money
           break
         } else {
           if (ns.getServerMaxRam(server) - ns.getServerUsedRam(server) >= needram) {
-            ns.scp("pain.js", server, host)
-            ns.exec("pain.js", server, threads, target)
+            ns.scp("grow.js", server, host)
+            ns.exec("grow.js", server, threads, target)
             await ns.sleep(growtime);
-            let nowmoney = ns.getServerMoneyAvailable(target);
+            var nowmoney = ns.getServerMoneyAvailable(target);
             nowmoney = money
             break
           } else {
@@ -59,16 +64,17 @@ export async function main(ns) {
       const threads = Math.ceil(ns.hackAnalyzeThreads(target, maxmoney * 0.75));
       const hackram = ns.getScriptRam("hack.js");
       const needram = Math.ceil(hackram * threads);
-      const hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer()) + 10;
+      const hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer()) + 1000;
       ns.print("Need ram for hack:" + ns.formatRam(needram))
       for (const server of ns.scan(host)) {
         if (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) >= needram) {
-          await ns.hack(target)
+          ns.run("hack.js", threads, target)
+          await ns.sleep(hacktime);
           break
         } else {
           if (ns.getServerMaxRam(server) - ns.getServerUsedRam(server) >= needram) {
-            ns.scp("pain.js", server, host)
-            ns.exec("pain.js", server, threads, target)
+            ns.scp("hack.js", server, host)
+            ns.exec("hack.js", server, threads, target)
             await ns.sleep(hacktime);
             break
           } else {
