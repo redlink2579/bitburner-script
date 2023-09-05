@@ -1,15 +1,15 @@
-import { all } from "function.js"
+import * as lib from "function.js"
 /** @param {NS} ns */
 export async function main(ns) {
+  const target = ns.args[0]
+
   while (true) {
-    if (issecurityprep(target)) {
-      let currentsec = ns.getServerSecurityLevel(target);
-      let money = ns.getServerMoneyAvailable(target);
-      await weakensecurity(target)
-    } else if (ismoneyprep(target)) {
-      await growmoney(target)
+    if (lib.issecurityprep(ns, target)) {
+      await lib.weakensecurity(ns, target)
+    } else if (lib.ismoneyprep(ns, target)) {
+      await lib.growmoney(ns, target)
     } else {
-      await makeitrain(target)
+      await lib.makeitrain(ns, target)
     }
   }
 }
