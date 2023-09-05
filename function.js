@@ -1,13 +1,11 @@
 ///this is a spagetthi code, please forgive me me new :<
 /** @param {NS} ns */
-let currentsec = ns.getServerSecurityLevel(target);
-let money = ns.getServerMoneyAvailable(target);
 export function issecurityprep(ns, target) {
-  return currentsec > minsecurity
+  return ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
 }
 
 export function ismoneyprep(ns, target) {
-  return money < maxmoney
+  return ns.getServerMoneyAvailable(target) <  ns.getServerMaxMoney(target)
 }
 
 export function avaliableram(ns, host) {
