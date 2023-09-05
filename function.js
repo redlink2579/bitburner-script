@@ -1,30 +1,24 @@
+///this is a spagetthi code, please forgive me me new :<
 /** @param {NS} ns */
-export function value() {
-  const home = "home"
-  const host = ns.getHostname()
-  const target = ns.args[0];
-  const maxmoney = ns.getServerMaxMoney(target);
-  const minsecurity = ns.getServerMinSecurityLevel(target);
-  let currentsec = ns.getServerSecurityLevel(target);
-  let money = ns.getServerMoneyAvailable(target);
-}
-export  function issecurityprep(target) {
+let currentsec = ns.getServerSecurityLevel(target);
+let money = ns.getServerMoneyAvailable(target);
+export function issecurityprep(ns, target) {
   return currentsec > minsecurity
 }
 
-export  function ismoneyprep(target) {
+export function ismoneyprep(ns, target) {
   return money < maxmoney
 }
 
-export  function avaliableram(host) {
+export function avaliableram(ns, host) {
   return ns.getServerMaxRam(host) - ns.getServerUsedRam(host)
 }
 
-export  function serveravalibleram(server) {
+export function serveravalibleram(ns, server) {
   return ns.getServerMaxRam(server) - ns.getServerUsedRam(server)
 }
 
-export  async function weakensecurity(target) {
+export async function weakensecurity(ns, target) {
   const threads = Math.ceil((currentsec - minsecurity) / ns.weakenAnalyze(1));
   const weakenram = ns.getScriptRam("weaken.js");
   const needram = Math.ceil(weakenram * threads);
@@ -46,7 +40,7 @@ export  async function weakensecurity(target) {
   }
 }
 
-export  async function growmoney(target) {
+export async function growmoney(ns, target) {
   const threads = Math.ceil(ns.growthAnalyze(target, maxmoney / money, 1));
   const growram = ns.getScriptRam("grow.js");
   var needram = Math.ceil(growram * threads);
@@ -55,7 +49,7 @@ export  async function growmoney(target) {
   for (const server of ns.scan(host)) {
     if (avaliableram(host) >= needram) {
       ns.run("grow.js", threads, target)
-      await ns.sleep(growtime);
+      try { await ns.sleep(growtime); } catch { }
       break
     } else if (serveravalibleram(server) >= needram) {
       ns.scp("grow.js", server, home)
@@ -68,7 +62,7 @@ export  async function growmoney(target) {
   }
 }
 
-export  async function makeitrain(target) {
+export async function makeitrain(ns, target) {
   const threads = Math.ceil(ns.hackAnalyzeThreads(target, maxmoney * 0.75));
   const hackram = ns.getScriptRam("hack.js");
   const needram = Math.ceil(hackram * threads);
