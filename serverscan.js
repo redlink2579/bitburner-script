@@ -14,24 +14,16 @@ export async function main(ns) {
     return serversSeen;
   }
   let servers = getserver()
-  function filteredserver(servers) {
-    for (let i = 0; i < 3; i++) {
-    let server = servers[i]
-    JSON.stringify(server)
-    const predicate = (server) => (player.skills.hacking) > ns.getServerRequiredHackingLevel(server)
-    let filteredserver = servers.filter(predicate)
-    filteredserver.lenght = 3
-    }
-  return filteredserver
-  }
+  let filteredserver = servers.filter(server => ns.getHackingLevel() > ns.getServerRequiredHackingLevel(server))
+  filteredserver.lenght = 3
 
+  ns.clear("server.txt")
   for (let i = 0; i < 3; i++) {
     let server = filteredserver[i]
-    let serverhacklevel = ns.getServerRequiredHackingLevel(server)
-    let servermaxmoney = ns.getServerMoneyAvailable(server)
-    let string = "server: " + server + ", Hack lvl: " + serverhacklevel + ", Max Money: " + servermaxmoney
+    let serverhacklevel = ns.formatNumber(ns.getServerRequiredHackingLevel(server),3,1000)
+    let servermaxmoney = ns.formatNumber(ns.getServerMoneyAvailable(server),3,1000)
+    let string = "\nserver: " + server +  "\nHack lvl: " + serverhacklevel + "\nMax Money: " + servermaxmoney
     ns.write("server.txt", string, "a")
   }
   ns.tprint("Recommend server are now in server.txt")
-  ns.tprint(servers)
 }
