@@ -20,17 +20,17 @@ export async function main(ns) {
   while (true) {
     let serverCurrentSecurity = ns.getServerSecurityLevel(arg)
     let serverMinSecurity = ns.getServerMinSecurityLevel(arg)
-    let servermoney = ns.formatNumber(ns.getServerMoneyAvailable(arg), 2, 1000)
-    let servermaxmoney = ns.formatNumber(ns.getServerMaxMoney(arg), 2, 1000)
-    let money = servermoney + "$/" + servermaxmoney + "$"
-    let Security = "(" + serverMinSecurity + ")" + "+" + Math(serverCurrentSecurity - serverMinSecurity)
+    let servermoney = ns.formatNumber(ns.getServerMoneyAvailable(arg), 0, 1000)
+    let servermaxmoney = ns.formatNumber(ns.getServerMaxMoney(arg), 0, 1000)
+    let money = `${servermoney}`.padStart(9)+"/"+`${servermaxmoney}`.padEnd(9)
+    let Security = "(".padStart(9) + serverMinSecurity + ")"  + Math.abs(serverCurrentSecurity - serverMinSecurity) + "+".padEnd(9)
     let line = lines[indexline]
     ns.print(edge);
     ns.print("Target: " + arg)
     ns.print("pain.js: " + JSON.parse(port.peek()))
     ns.print(section);
     ns.print("        Money        |       Security")
-    ns.print(targetmoney + "$" + spacer.padStart(3) + serverMinSecurity)
+    ns.print(money + "|".padStart(3) + Security)
     ns.print(section);
     ns.print("Elapsed for: " + ns.tFormat(time), "[" + line + "]")
     ns.print(section);
