@@ -7,7 +7,6 @@ export async function main(ns) {
   const maxWidth = 10;
   let indexline = 0;
   const refreshRate = 1000 //How often the loop refresh
-  let time = 0 //Time for how long monitor have been running
   const edge = "============================================="
   const section = "---------------------------------------------"
   const start = Date.now();
