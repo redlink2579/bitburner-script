@@ -26,15 +26,12 @@ export async function main(ns) {
     GrantRoot(ns, target)
   };
   if (!isPrepped(ns, target)) {
-    if (issecurityprep(ns, target) == true) {
-      const WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target)) / ns.weakenAnalyze(1))
-      let weaken = batch[1]
-      for (let i = 0; i++;) {
-        let pid = ns.exec(weaken.tool, ramhost[i], WT, weaken, weakentime)
-        let port = ns.getPortHandle(pid)
-        await port.nextWrite()
-        break
-      }
-    }
+    const WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target)) / ns.weakenAnalyze(1))
+    let weaken = batch[1]
+    let pid = ns.exec(weaken.tool, ramhost[0], WT, weaken, weakentime)
+    let port = ns.getPortHandle(pid)
+    ns.print("Reducing security level at ", target)
+    ns.print("ETA:", ns.tFormat(Date.now(weakentime)))
+    await port.nextWrite()
   }
 }
