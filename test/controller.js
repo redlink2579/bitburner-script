@@ -24,6 +24,7 @@ export async function main(ns) {
   }
   ramsort()
   JSON.stringify(ramhost)
+  ns.print("Current target is: ", target)
   ns.tprint("Avalible server for ramhost are:", ramhost)
   if (!ns.hasRootAccess(target)) {
     GrantRoot(ns, target)
