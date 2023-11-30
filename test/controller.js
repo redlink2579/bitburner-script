@@ -33,11 +33,35 @@ export async function main(ns) {
     let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
     let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
     ns.print("If this is print then this work")
-    for (i = 0; ; i++) {
+    for (let i = 0; ; i++) {
       ns.exec(weak1.tool, ramhost[i], WT, weak1, target);
-      ramsort
       ns.exec(grow.tool, ramhost[i], GT, grow, target)
-      ramsort
+      const pid1 = ns.exec(weak2.tool, ramhost[i], WT, weak2, target)
+      let port = ns.getPortHandle(pid1)
+      const timer = setInterval(() => {
+        ns.clearLog()
+        ns.print("Preparing the server")
+        ns.print("|---------------------------------------")
+        ns.print("| Running Prep-batch: ", ns.tFormat(weakentime + weak2.delay))
+        ns.print("|=======================================")
+      }, 1000)
+
+      await port.nextWrite()
+      clearInterval(timer)
+      break
+    }
+  } else {
+    let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * 0.99))
+    let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
+    let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
+    JSON.stringify(hack)
+    JSON.stringify(weak1)
+    JSON.stringify(grow)
+    JSON.stringify(weak2)
+    for (let i = 0; ; i++) {
+      ns.exec(hack.tool, ramhost[i], HT, hack, target)
+      ns.exec(weak1.tool, ramhost[i], WT, weak1, target);
+      ns.exec(grow.tool, ramhost[i], GT, grow, target)
       const pid1 = ns.exec(weak2.tool, ramhost[i], WT, weak2, target)
       let port = ns.getPortHandle(pid1)
       const timer = setInterval(() => {
