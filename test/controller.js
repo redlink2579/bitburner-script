@@ -13,6 +13,7 @@ export async function main(ns) {
   let growtime = Math.ceil(weakentime / 4)
   let hacktime = Math.ceil(weakentime * 0.8)
   let ramhosts = getserver(ns)
+  const file = ["test/weaken.js", "test/grow.js", "test/hack.js"]
   const hack = { job: "hack", tool: "test/hack.js", ramcost: 1.7, };
   const weak1 = { job: "weaken", tool: "test/weaken.js", ramcost: 1.75, };
   const grow = { job: "grow", tool: "test/grow.js", ramcost: 1.75, }
@@ -36,18 +37,19 @@ export async function main(ns) {
     let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
     ns.print("If this is print then this work")
     for (let i = 0; ; i++) {
+      ns.scp(["test/weaken.js", "test/grow.js"], ramhost[i], "home")
       ns.exec(weak1.tool, ramhost[i], WT, JSON.stringify(weak1), target, weakentime, endtime);
-      ramsort
+      ramsort()
       ns.exec(grow.tool, ramhost[i], GT, JSON.stringify(grow), target, growtime, endtime + delay)
-      ramsort
+      ramsort()
       const pid1 = ns.exec(weak2.tool, ramhost[i], WT, JSON.stringify(weak2), target, weakentime, endtime + 2 * delay)
-      ramsort
+      ramsort()
       let port = ns.getPortHandle(pid1)
       const timer = setInterval(() => {
         ns.clearLog()
         ns.print("Preparing the server")
         ns.print("|---------------------------------------")
-        ns.print("| Running Prep-batch: ", ns.tFormat(weakentime + 2 * delay))
+        ns.print("| Running Prep-batch: ", ns.tFormat(endtime - Date.now()))
         ns.print("|=======================================")
       }, 1000)
 
@@ -60,20 +62,21 @@ export async function main(ns) {
     let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
     let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / Math.round(ns.getServerMoneyAvailable(target) * yoink), 1));
     for (let i = 0; ; i++) {
+      ns.scp(["test/weaken.js", "test/grow.js", "test/hack.js"], ramhost[i], "home")
       ns.exec(hack.tool, ramhost[i], HT, JSON.stringify(hack), target, hacktime, endtime - delay)
-      ramsort
+      ramsort()
       ns.exec(weak1.tool, ramhost[i], WT, JSON.stringify(weak1), target, weakentime, endtime);
-      ramsort
+      ramsort()
       ns.exec(grow.tool, ramhost[i], GT, JSON.stringify(grow), target, growtime, endtime + delay)
-      ramsort
+      ramsort()
       const pid1 = ns.exec(weak2.tool, ramhost[i], WT, JSON.stringify(weak2), target, weakentime, endtime + 2 * delay)
-      ramsort
+      ramsort()
       let port = ns.getPortHandle(pid1)
       const timer = setInterval(() => {
         ns.clearLog()
         ns.print("Preparing the server")
         ns.print("|---------------------------------------")
-        ns.print("| Running batch: ", ns.tFormat(weakentime + 2 * delay - Date.now))
+        ns.print("| Running batch: ", ns.tFormat(endtime - Date.now()))
         ns.print("|=======================================")
       }, 1000)
 
