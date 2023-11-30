@@ -19,7 +19,7 @@ export async function main(ns) {
   const grow = { job: "grow", tool: "test/grow.js", ramcost: 1.75, }
   const weak2 = { job: "weaken2", tool: "test/weaken.js", ramcost: 1.75, };
   const delay = 10
-  let endtime = weakentime + Date.now()
+  let endtime = Date.now() + weakentime;
 
   let ramhost = ramhosts.filter(server => ns.hasRootAccess(server) == true) //Finding servers that we have access
   function ramsort() {
