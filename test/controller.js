@@ -51,7 +51,7 @@ export async function main(ns) {
       break
     }
   } else {
-    let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * 0.99))
+    let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * yoink))
     let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
     let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
     JSON.stringify(hack)
