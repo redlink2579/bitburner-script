@@ -7,6 +7,7 @@ export async function main(ns) {
   const dataport = ns.getPortHandle(ns.args[4])
   const port = ns.getPortHandle(ns.pid)
   let delay = endtime - Date.now() - growtime
+  ns.print(ns.tFormat(delay))
 
   if (delay < 0) {
     ns.tprint("!!WARNING!!:", works.job, " was ", ns.tFormat(-delay, true), "late", ns.tFormat(growtime))
@@ -21,6 +22,6 @@ export async function main(ns) {
   const end = Date.now
   ns.atExit(() => {
     if (works.report) { dataport.write(works.job, end) }
-    ns.tprint("Batch ", works.job, " has finished at:", ns.tFormat(end))
+    ns.tprint("Batch ", works.job, " has finished at ", new Date().toLocaleTimeString())
   })
 }
