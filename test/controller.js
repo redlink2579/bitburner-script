@@ -8,7 +8,7 @@ export async function main(ns) {
   servers.sort((x, y) => ns.getServerMaxMoney(y) - ns.getServerMaxMoney(x)) //Sorting targets by money
   let targets = servers.filter(server => Math.floor(ns.getHackingLevel() * 0.5) > ns.getServerRequiredHackingLevel(server)) //filtering targets to only those that we can hack
   let target = targets[0] ?? "n00dles" //Fallback incase of unable to find target, Usually when starting new run
-  let weakentime = ns.getWeakenTime(target) 
+  let weakentime = ns.getWeakenTime(target)
   let growtime = Math.ceil(weakentime * 0.8)
   let hacktime = Math.ceil(weakentime / 4)
   function recalctime() {
@@ -48,23 +48,33 @@ export async function main(ns) {
   while (true) {
     if (!isPrepped(ns, target)) {
       if (ns.getServerMoneyAvailable(target) != ns.getServerMaxMoney(target)) {
+        ns.scp(["test/weaken.js", "test/grow.js"], ramhost[0], "home")
         endtime = Date.now() + weakentime;
         delay = 0
+        let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
+        let WTG = Math.ceil(GT / 12.5)
         let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
         ns.print(WT) //Just for debugging
-        let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
-        ns.scp(["test/weaken.js", "test/grow.js"], ramhost[0], "home")
+        if (!ns.fileExists(weak1.tool, ramhost[0])) {
+          ns.scp("test/weaken.js", ramhost[0], "home")
+        }
         portid = ns.exec(weak1.tool, ramhost[0], WT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
         const portw1 = ns.getPortHandle(portid)
         await portw1.nextWrite()
         delay += portw1.read()
         ramsort()
+        if (!ns.fileExists(grow.tool, ramhost[0])) {
+          ns.scp(grow.tool, ramhost[0], "home")
+        }
         portid = ns.exec(grow.tool, ramhost[0], GT, JSON.stringify(grow), target, growtime, endtime + spacer + delay, ns.pid)
         const portg = ns.getPortHandle(portid)
         await portg.nextWrite()
         delay += portg.read()
         ramsort()
-        portid = ns.exec(weak2.tool, ramhost[0], WT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
+        if (!ns.fileExists(weak2.tool, ramhost[0])) {
+          ns.scp(weak2.tool, ramhost[0], "home")
+        }
+        portid = ns.exec(weak2.tool, ramhost[0], WTG, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
         const portw2 = ns.getPortHandle(portid)
         await portw2.nextWrite()
         delay += portw2.read()
@@ -87,6 +97,9 @@ export async function main(ns) {
           recalctime()
         }
       } else {
+        if (!ns.fileExists(weak2.tool, ramhost[0])) {
+          ns.scp(weak2.tool, ramhost[0], "home")
+        }
         endtime = Date.now() + weakentime;
         delay = 0
         let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
@@ -115,27 +128,40 @@ export async function main(ns) {
       }
     } else {
       endtime = Date.now() + weakentime;
-      let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * yoink))
-      let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
-      let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / Math.round(ns.getServerMoneyAvailable(target) * yoink), 1));
+      let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / (ns.getServerMoneyAvailable(target) * yoink), 1));
+      let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * yoink));
+      let WHT = Math.ceil(HT / 25)
+      let WGT = Math.ceil(GT / 12.5)
       delay = 0
       ns.scp(["test/weaken.js", "test/grow.js", "test/hack.js"], ramhost[0], "home")
+      if (!ns.fileExists(hack.tool, ramhost[0])) {
+        ns.scp(hack.tool, ramhost[0], "home")
+      }
       portid = ns.exec(hack.tool, ramhost[0], HT, JSON.stringify(hack), target, hacktime, endtime - spacer + delay, ns.pid)
       const porth = ns.getPortHandle(portid)
       await porth.nextWrite()
       delay += porth.read()
       ramsort()
-      portid = ns.exec(weak1.tool, ramhost[0], WT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
+      if (!ns.fileExists(weak1.tool, ramhost[0])) {
+        ns.scp(weak1.tool, ramhost[0], "home")
+      }
+      portid = ns.exec(weak1.tool, ramhost[0], WHT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
       const portw1 = ns.getPortHandle(portid)
       await portw1.nextWrite()
       delay += portw1.read()
       ramsort()
+      if (!ns.fileExists(grow.tool, ramhost[0])) {
+        ns.scp(grow.tool, ramhost[0], "home")
+      }
       portid = ns.exec(grow.tool, ramhost[0], GT, JSON.stringify(grow), target, growtime, endtime + spacer + delay, ns.pid)
       const portg = ns.getPortHandle(portid)
       await portg.nextWrite()
       delay += portg.read()
       ramsort()
-      portid = ns.exec(weak2.tool, ramhost[0], WT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
+      if (!ns.fileExists(weak2.tool, ramhost[0])) {
+        ns.scp(weak2.tool, ramhost[0], "home")
+      }
+      portid = ns.exec(weak2.tool, ramhost[0], WGT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
       const portw2 = ns.getPortHandle(portid)
       await portw2.nextWrite()
       delay += portw2.read()
