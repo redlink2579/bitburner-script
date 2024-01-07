@@ -1,9 +1,9 @@
-const yoink = 0.99
+const yoink = 0.80
 
 import { getserver, isPrepped, GrantRoot, } from "lib/function.js"
 /** @param {NS} ns */
 export async function main(ns) {
-  ns.tail()
+  const controldelay = ns.args[0] ?? 0
   let servers = getserver(ns) //Fetching entire network
   servers.sort((x, y) => ns.getServerMaxMoney(y) - ns.getServerMaxMoney(x)) //Sorting targets by money
   let targets = servers.filter(server => Math.floor(ns.getHackingLevel() * 0.5) > ns.getServerRequiredHackingLevel(server)) //filtering targets to only those that we can hack
@@ -11,6 +11,7 @@ export async function main(ns) {
   let weakentime = ns.getWeakenTime(target)
   let growtime = Math.ceil(weakentime * 0.8)
   let hacktime = Math.ceil(weakentime / 4)
+  let weakenpower = ns.weakenAnalyze(1)
   function recalctime() {
     weakentime = ns.getWeakenTime(target)
     growtime = Math.ceil(weakentime * 0.8)
@@ -24,9 +25,14 @@ export async function main(ns) {
   const spacer = 20 //Spacer for each job
   const dataport = ns.getPortHandle(ns.pid) //Netport for timing purpose
   dataport.clear //Makesure nothing is in port
-  let endtime = Date.now() + weakentime; //Delay calculation
+  
+  let monitorpid = ns.exec("script-moniter.js", "home", 1, target)
+  const monitorport = ns.getPortHandle(monitorpid)
+  //const supercontrol = ns.args[1] ?? 0 : not used
+  let endtime = Date.now() + weakentime + controldelay; //Delay calculation
   let delay = 0 //Accumilating delay for when job is desync
   let portid = 1 //For fetching delay data
+  
   if (ns.fileExists("Formulas.exe")) {
     weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
     hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
@@ -52,8 +58,8 @@ export async function main(ns) {
         endtime = Date.now() + weakentime;
         delay = 0
         let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target), 1));
-        let WTG = Math.ceil(GT / 12.5)
-        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
+        let WTG = Math.ceil(GT * 0.004 / weakenpower);
+        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
         ns.print(WT) //Just for debugging
         if (!ns.fileExists(weak1.tool, ramhost[0])) {
           ns.scp("test/weaken.js", ramhost[0], "home")
@@ -79,16 +85,10 @@ export async function main(ns) {
         await portw2.nextWrite()
         delay += portw2.read()
         ramsort()
-        const timer = setInterval(() => {
-          ns.clearLog()
-          ns.print("Preparing the server")
-          ns.print("|---------------------------------------")
-          ns.print("| Running Prep-batch: ", ns.tFormat(endtime - Date.now()))
-          ns.print("|=======================================")
-        }, 1000)
 
+        monitorport.clear()
+        monitorport.write("Preparing server")
         await dataport.nextWrite()
-        clearInterval(timer)
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
           hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
@@ -102,22 +102,17 @@ export async function main(ns) {
         }
         endtime = Date.now() + weakentime;
         delay = 0
-        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / ns.weakenAnalyze(1));
+        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
         ns.print(WT)
         portid = ns.exec(weak2.tool, ramhost[0], WT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
         const portw2 = ns.getPortHandle(portid)
         await portw2.nextWrite()
         delay += portw2.read()
         ramsort()
-        const timer = setInterval(() => {
-          ns.clearLog()
-          ns.print("Preparing the server")
-          ns.print("|---------------------------------------")
-          ns.print("| Weakening server: ", ns.tFormat(endtime - Date.now()))
-          ns.print("|=======================================")
-        }, 1000)
+
+        monitorport.clear
+        monitorport.write("Weakening server")
         await dataport.nextWrite()
-        clearInterval(timer)
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
           hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
@@ -130,8 +125,8 @@ export async function main(ns) {
       endtime = Date.now() + weakentime;
       let GT = Math.ceil(ns.growthAnalyze(target, ns.getServerMaxMoney(target) / (ns.getServerMoneyAvailable(target) * yoink), 1));
       let HT = Math.floor(ns.hackAnalyzeThreads(target, ns.getServerMaxMoney(target) * yoink));
-      let WHT = Math.ceil(HT / 25)
-      let WGT = Math.ceil(GT / 12.5)
+      let WHT = Math.ceil(HT * 0.002 / weakenpower);
+      let WGT = Math.ceil(GT * 0.004 / weakenpower);
       delay = 0
       ns.scp(["test/weaken.js", "test/grow.js", "test/hack.js"], ramhost[0], "home")
       if (!ns.fileExists(hack.tool, ramhost[0])) {
@@ -166,16 +161,10 @@ export async function main(ns) {
       await portw2.nextWrite()
       delay += portw2.read()
       ramsort()
-      const timer = setInterval(() => {
-        ns.clearLog()
-        ns.print("Batch running")
-        ns.print("|---------------------------------------")
-        ns.print("| Running batch: ", ns.tFormat(endtime - Date.now()))
-        ns.print("|=======================================")
-      }, 1000)
-
+      
+      monitorport.clear
+      monitorport.write("Running batch")
       await dataport.nextWrite()
-      clearInterval(timer)
       if (ns.fileExists("Formulas.exe")) {
         weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
         hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
