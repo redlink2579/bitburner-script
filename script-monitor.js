@@ -1,50 +1,53 @@
+import {isPrepped} from "lib/function.js"
+
 /** @param {NS} ns */
 export async function main(ns) {
-  const arg = ns.args[0]
-  const home = "home"
-  let port = ns.getPortHandle(ns.getRunningScript("pain.js", home, arg).pid)//Get port from batch script
-  let port2 = ns.getPortHandle(1) //Addition port for cycle log
-  const maxWidth = 10;
-  let indexline = 0;
-  const refreshRate = 1000 //How often the loop refresh
-  const edge = "============================================="
-  const section = "---------------------------------------------"
-  const start = Date.now();
-  ns.tail();
-  ns.disableLog("sleep")
-  ns.disableLog("getServerSecurityLevel")
-  ns.disableLog("getServerMinSecurityLevel")
-  ns.disableLog("getServerMoneyAvailable")
-  ns.disableLog("getServerMaxMoney")
+  const target = ns.args[0]
+  const serverminsec = ns.getServerMinSecurityLevel(target)
+  const servermaxmoney = ns.getServerMaxMoney(target)
+  const brace = "======================================================"
+  const line = "------------------------------------------------------"
+  const spinners = [" - ", " \ ", " | ", " / "]
+  const port = ns.getPortHandle(ns.pid)
+  const timestart = Date.now()
+  let indexspinner = 0
 
-  while (true) {
-    let time = Date.now() - start;
-    const line = "".padStart(indexline, "|").padEnd(maxWidth, " ");
-    let serverCurrentSecurity = ns.getServerSecurityLevel(arg)
-    let serverMinSecurity = ns.getServerMinSecurityLevel(arg)
-    let servermoney = ns.formatNumber(ns.getServerMoneyAvailable(arg), 0, 1000)
-    let servermaxmoney = ns.formatNumber(ns.getServerMaxMoney(arg), 0, 1000)
-    let money = `${servermoney}`.padStart(9) + "/" + `${servermaxmoney}`.padEnd(9)
-    let Security = "(".padStart(9) + serverMinSecurity + ")" + Math.abs(serverCurrentSecurity - serverMinSecurity) + "+".padEnd(9)
-    ns.print(edge);
-    ns.print("Target: " + arg)
-    ns.print("pain.js: " + JSON.parse(port.peek()))
-    ns.print(section);
-    ns.print("        Money        |       Security")
-    ns.print(money + "|".padStart(3) + Security)
-    ns.print(section);
-    ns.print("Elapsed for: " + ns.tFormat(time), "[" + line + "]")
-    ns.print(section);
-    ns.print("Cycle:")
-    if (!port2.empty) {
-      ns.print("[" + port2.peek + "]")
+  function prepped() {
+    if (isPrepped(ns, target)) {
+      return "[Y]"
     } else {
-      ns.print("[" + "Empty :(" + "]")
+      return "[N]"
     }
-    ns.print(edge);
-    indexline = ++indexline % (maxWidth + 1);
+  }
 
-    await ns.sleep(refreshRate)
+  ns.tail()
+  ns.disableLog("ALL")
+  while (true) {
+    let time = Date.now() - timestart
+    let localetime = new Date().toLocaleString()
+    let serversec = ns.getServerSecurityLevel(target)
+    let servermoney = ns.getServerMoneyAvailable(target)
+    let spinner = spinners[indexspinner]
+
+    ns.print("Runtime: ", ns.tFormat(time))
+    ns.print(localetime)
+    ns.print(brace)
+    ns.print("Server prepared status: " , prepped())
+    ns.print(line)
+    ns.print("Current Security level: +", (serversec - serverminsec).toFixed(2))
+    ns.print("Current Server money: ", ns.formatNumber(servermoney, 2, 1e3), "/", ns.formatNumber(servermaxmoney, 2, 1e3))
+    ns.print(line)
+    if (port.empty()) {
+      ns.print("Currently nothing is happened", spinner)
+    } else {
+      ns.print("Currently: " , port.read , spinner)
+    }
+    ns.print(brace)
+
+
+    await ns.sleep(1000)
+
+    indexspinner = indexspinner >= spinners.length - 1 ? 0 : indexspinner + 1;
     ns.clearLog()
   }
 }
