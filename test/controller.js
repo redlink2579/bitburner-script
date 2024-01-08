@@ -86,7 +86,7 @@ export async function main(ns) {
         ramsort()
 
         monitorport.clear()
-        monitorport.write(JSON.stringify("Preparing server"))
+        monitorport.write("Preparing server")
         await dataport.nextWrite()
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
@@ -110,7 +110,7 @@ export async function main(ns) {
         ramsort()
 
         monitorport.clear
-        monitorport.write(JSON.stringify("Weakening server"))
+        monitorport.write("Weakening server")
         await dataport.nextWrite()
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
@@ -162,7 +162,7 @@ export async function main(ns) {
       ramsort()
 
       monitorport.clear
-      monitorport.write(JSON.stringify("Running batch"))
+      monitorport.write("Running batch")
       await dataport.nextWrite()
       if (ns.fileExists("Formulas.exe")) {
         weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
