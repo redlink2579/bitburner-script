@@ -10,18 +10,19 @@ export async function main(ns) {
   ns.print(ns.tFormat(delay))
 
   if (delay < 0) {
-    ns.tprint("!!WARNING!!:", works.job, " was ", ns.tFormat(-delay, true), "late", ns.tFormat(growtime))
+    ns.tprint(`WARN: ${works.job} was ${-delay} ms late, expect runing time was:, ${ns.tFormat(growtime)}`)
     port.write(-delay)
     delay = 0
   } else {
-    ns.tprint("Running ", works.job, " at ", target, " for:", ns.tFormat(growtime + delay))
+    ns.tprint(`INFO: Running ${works.job} at ${target} for: ${ns.tFormat(growtime + delay)}`)
     port.write(0)
   }
-  await ns.grow(target, { additionalMsec: delay })
+  let growadd = await ns.grow(target, { additionalMsec: delay })
+  ns.write("logging.txt", "grow-add = " + growadd + " \n ", "a")
 
   const end = Date.now
   ns.atExit(() => {
     if (works.report) { dataport.write(works.job, end) }
-    ns.tprint("Batch ", works.job, " has finished at ", new Date().toLocaleTimeString())
+    ns.tprint(`SUCCESS: Batch ${works.job} has finished at  ${new Date().toLocaleTimeString()}`)
   })
 }
