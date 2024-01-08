@@ -19,9 +19,10 @@ export async function main(ns) {
       return "[N]"
     }
   }
-
-  ns.tail()
+  
   ns.disableLog("ALL")
+  ns.tail()
+  ns.resizeTail(530,270)
   while (true) {
     let time = Date.now() - timestart
     let localetime = new Date().toLocaleString()
@@ -40,7 +41,7 @@ export async function main(ns) {
     if (port.empty()) {
       ns.print("Currently nothing is happened", spinner)
     } else {
-      ns.print("Currently: " , port.read , spinner)
+      ns.print("Currently: " , JSON.parse(port.read) , spinner)
     }
     ns.print(brace)
 
