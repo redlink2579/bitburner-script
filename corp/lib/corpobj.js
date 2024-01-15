@@ -13,7 +13,7 @@ export const citiesobj = {
   Volhaven: "Volhaven"
 }
 
-export const corpstate = {
+export const corpState = {
   Start: "START",
   Purchase: "PURCHASE",
   Production: "PRODUCTION",
