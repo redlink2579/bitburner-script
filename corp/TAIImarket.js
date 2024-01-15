@@ -1,3 +1,5 @@
+//Currently not working
+
 import { getOptimalSellingPrice } from "corp/lib/corputils.js"
 /** @param {NS} ns */
 export async function main(ns) {
