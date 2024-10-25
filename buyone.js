@@ -1,8 +1,7 @@
 import { getserver } from "lib/function.js"
 /** @param {NS} ns */
 export async function main(ns) {
-  const port = ns.args[0] ?? 0
-  const ram = ns.args[1] ?? 32768
+  const ram = ns.args[0] ?? 32768
   const name = "pserv"
   let buyram = Math.pow(2, Math.ceil(Math.log2(ram)))
   let cost = ns.getPurchasedServerCost(buyram)
@@ -10,6 +9,7 @@ export async function main(ns) {
   let pserver = servers.filter(x => x.startsWith(name))
   ns.tprint(pserver)
   if (cost > ns.getServerMoneyAvailable("home")) {
+    ns.getPortHandle(ns.pid).write("N")
     throw new Error(`Not enough money to buy server!, require ${ns.formatNumber(cost, 1, 1e4)} for ${ns.formatRam(buyram)}`)
   }
 
@@ -21,8 +21,5 @@ export async function main(ns) {
 
   ns.tprint(`Purchasing server for ${ns.formatRam(buyram)}`)
   ns.purchaseServer(name, buyram)
-  if (port != 0) {
-    ns.getPortHandle(port).write("Y")
-    return ns.print("Success")
-  }
+  ns.getPortHandle(ns.pid).write("Y")
 }
