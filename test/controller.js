@@ -80,12 +80,12 @@ export async function main(ns) {
 
   //Ramcheck(Nessecary)
   async function ramcheck(ram) {
+    ramsort()
     if ((ns.getServerMaxRam(ramhost[0]) - ns.getServerUsedRam(ramhost[0])) <= ram) {
       debug(`Ramcheck failed buying server`)
-      let serverport = ns.exec("buyone.js", "home", 1, ram, ns.pid)
+      let serverport = ns.exec("buyone.js", "home", 1, ram)
       await ns.getPortHandle(serverport).nextWrite()
-      dataport.clear()
-      return
+      return ns.asleep(5)
     } else {
       return debug("Ramcheck Pass")
     }
