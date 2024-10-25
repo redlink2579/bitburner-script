@@ -1,10 +1,15 @@
-const yoink = 0.30 // Default: 0.80
-
+//Welcome to my mostly undocumented proto-batcher
+//By @Greytider(redlink2579)
 import { getserver, isPrepped, GrantRoot, } from "lib/function.js"
 /** @param {NS} ns */
 export async function main(ns) {
+  const yoink = ns.args[0] // Default: 0.80
+  const overseerport = ns.getPortHandle(ns.args[1])
+  const controldelay = ns.args[3]
+  let target = ns.args[4]
   const debugmode = true // for debugging
   const debugopt = 2 // 1 = to log, 2 = to terminal
+  let workerpid = []
 
   function debug(string) {
     if (debugmode == true) {
@@ -16,11 +21,17 @@ export async function main(ns) {
     }
   }
 
-  const controldelay = 0
-  let servers = getserver(ns) //Fetching entire network
-  servers.sort((x, y) => ns.getServerMaxMoney(y) - ns.getServerMaxMoney(x)) //Sorting targets by money
-  let targets = servers.filter(server => Math.floor(ns.getHackingLevel() * 0.5) > ns.getServerRequiredHackingLevel(server)) //filtering targets to only those that we can hack
-  let target = ns.args[0] ?? targets[0] ?? "n00dles" //Fallback incase of unable to find target, Usually when starting new run
+  function execfailhandler(port) {
+    if (port != 0) {
+      workerpid.push(port)
+    } else {
+      for (let i = 0; i <= workerpid.length; i++) {
+        ns.kill(workerpid[i])
+      }
+      throw new Error(`Not enough ram to run a single batch, Require more money for server (check your buyone.js error)`)
+    }
+  }
+
   let maxmoney = ns.getServerMaxMoney(target)
   let curmoney = ns.getServerMoneyAvailable(target)
   let weakentime = ns.getWeakenTime(target)
@@ -44,9 +55,8 @@ export async function main(ns) {
 
   let monitorpid = ns.exec("script-moniter.js", "home", 1, target)
   const monitorport = ns.getPortHandle(monitorpid)
-  //const supercontrol = ns.args[1] ?? 0 : not used
   let endtime = Date.now() + weakentime + controldelay; //Delay calculation
-  let delay = 0 //Accumilating delay for when job is desync
+  let delay = 0 + controldelay //Accumilating delay for when job is desync
 
   if (ns.fileExists("Formulas.exe")) {
     weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
@@ -67,7 +77,7 @@ export async function main(ns) {
   };
 
   //Ramcheck(Nessecary)
-  async function ramcheck(ram) {
+  function ramcheck(ram) {
     if ((ns.getServerMaxRam(ramhost[0]) - ns.getServerUsedRam(ramhost[0])) <= ram) {
       debug(`Ramcheck failed buying server`)
       ns.exec("buyone.js", "home", 1, ram, ns.pid)
@@ -97,6 +107,8 @@ export async function main(ns) {
         ramcheck(reqram)
         ramsort()
         const portidw1 = ns.exec(weak1.tool, ramhost[0], WT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
+        execfailhandler(portidw1)
+        workerpid.push(portidw1)
         const portw1 = ns.getPortHandle(portidw1)
         await portw1.nextWrite()
         delay += portw1.read()
@@ -106,6 +118,8 @@ export async function main(ns) {
         }
         ramsort()
         const portidg = ns.exec(grow.tool, ramhost[0], GT, JSON.stringify(grow), target, growtime, endtime + spacer + delay, ns.pid)
+        execfailhandler(portidg)
+        workerpid.push(portidg)
         const portg = ns.getPortHandle(portidg)
         await portg.nextWrite()
         delay += portg.read()
@@ -115,6 +129,8 @@ export async function main(ns) {
         }
         ramsort()
         const portidw2 = ns.exec(weak2.tool, ramhost[0], WGT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
+        execfailhandler(portidw2)
+        workerpid.push(portidw2)
         const portw2 = ns.getPortHandle(portidw2)
         await portw2.nextWrite()
         delay += portw2.read()
@@ -122,7 +138,10 @@ export async function main(ns) {
 
         monitorport.clear()
         monitorport.write("Preparing server")
+        overseerport.write("Prep")
         await dataport.nextWrite()
+        workerpid = []
+        overseerport.write("Done")
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
           hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
@@ -142,6 +161,8 @@ export async function main(ns) {
         ramcheck(WTRam)
         ramsort()
         const portidw2 = ns.exec(weak2.tool, ramhost[0], WT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
+        execfailhandler(portidw2)
+        workerpid.push(portidw2)
         const portw2 = ns.getPortHandle(portidw2)
         await portw2.nextWrite()
         delay += portw2.read()
@@ -149,7 +170,10 @@ export async function main(ns) {
 
         monitorport.clear
         monitorport.write("Weakening server")
+        overseerport.write("Prep")
         await dataport.nextWrite()
+        workerpid = []
+        overseerport.write("Done")
         if (ns.fileExists("Formulas.exe")) {
           weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
           hacktime = ns.formulas.hacking.hackTime(ns.getServer(target), ns.getPlayer())
@@ -179,8 +203,11 @@ export async function main(ns) {
         ns.scp(hack.tool, ramhost[0], "home")
       }
       ramcheck(reqram)
+      overseerport.write(reqram)
       ramsort()
       const portidh = ns.exec(hack.tool, ramhost[0], HT, JSON.stringify(hack), target, hacktime, endtime - spacer + delay, ns.pid)
+      execfailhandler(portidh)
+      workerpid.push(portidh)
       const porth = ns.getPortHandle(portidh)
       await porth.nextWrite()
       delay += porth.read()
@@ -190,6 +217,8 @@ export async function main(ns) {
       }
       ramsort()
       const portidw1 = ns.exec(weak1.tool, ramhost[0], WHT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
+      execfailhandler(portidw1)
+      workerpid.push(portidw1)
       const portw1 = ns.getPortHandle(portidw1)
       await portw1.nextWrite()
       delay += portw1.read()
@@ -199,6 +228,8 @@ export async function main(ns) {
       }
       ramsort()
       const portidg = ns.exec(grow.tool, ramhost[0], GT, JSON.stringify(grow), target, growtime, endtime + spacer + delay, ns.pid)
+      execfailhandler(portidg)
+      workerpid.push(portidg)
       const portg = ns.getPortHandle(portidg)
       await portg.nextWrite()
       delay += portg.read()
@@ -208,6 +239,8 @@ export async function main(ns) {
       }
       ramsort()
       const portidw2 = ns.exec(weak2.tool, ramhost[0], WGT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
+      execfailhandler(portidw2)
+      workerpid.push(portidw2)
       const portw2 = ns.getPortHandle(portidw2)
       await portw2.nextWrite()
       delay += portw2.read()
@@ -215,7 +248,10 @@ export async function main(ns) {
 
       monitorport.clear
       monitorport.write("Running batch")
+      overseerport.write("Deployed")
       await dataport.nextWrite()
+      workerpid = []
+      overseerport.write("Done")
       ns.print(`Server money:${ns.getServerMoneyAvailable(target)}`)
       if (ns.fileExists("Formulas.exe")) {
         weakentime = ns.formulas.hacking.weakenTime(ns.getServer(target), ns.getPlayer())
