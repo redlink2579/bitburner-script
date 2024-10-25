@@ -18,6 +18,8 @@ export async function main(ns) {
       } else {
         return ns.tprint(`[DEBUG]${string}`)
       }
+    } else {
+      return null
     }
   }
 
@@ -77,10 +79,13 @@ export async function main(ns) {
   };
 
   //Ramcheck(Nessecary)
-  function ramcheck(ram) {
+  async function ramcheck(ram) {
     if ((ns.getServerMaxRam(ramhost[0]) - ns.getServerUsedRam(ramhost[0])) <= ram) {
       debug(`Ramcheck failed buying server`)
-      ns.exec("buyone.js", "home", 1, ram, ns.pid)
+      let serverport = ns.exec("buyone.js", "home", 1, ram, ns.pid)
+      await ns.getPortHandle(serverport).nextWrite()
+      dataport.clear()
+      return
     } else {
       return debug("Ramcheck Pass")
     }
@@ -104,7 +109,7 @@ export async function main(ns) {
         if (!ns.fileExists(weak1.tool, ramhost[0])) {
           ns.scp("test/weaken.js", ramhost[0], "home")
         }
-        ramcheck(reqram)
+        await ramcheck(reqram)
         ramsort()
         const portidw1 = ns.exec(weak1.tool, ramhost[0], WT, JSON.stringify(weak1), target, weakentime, endtime + delay, ns.pid);
         execfailhandler(portidw1)
@@ -158,7 +163,7 @@ export async function main(ns) {
         let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
         let WTRam = Math.ceil(WT * weak1.ramcost)
         ns.print(WT)
-        ramcheck(WTRam)
+        await ramcheck(WTRam)
         ramsort()
         const portidw2 = ns.exec(weak2.tool, ramhost[0], WT, JSON.stringify(weak2), target, weakentime, endtime + spacer * 2 + delay, ns.pid)
         execfailhandler(portidw2)
@@ -202,7 +207,7 @@ export async function main(ns) {
       if (!ns.fileExists(hack.tool, ramhost[0])) {
         ns.scp(hack.tool, ramhost[0], "home")
       }
-      ramcheck(reqram)
+      await ramcheck(reqram)
       overseerport.write(reqram)
       ramsort()
       const portidh = ns.exec(hack.tool, ramhost[0], HT, JSON.stringify(hack), target, hacktime, endtime - spacer + delay, ns.pid)
