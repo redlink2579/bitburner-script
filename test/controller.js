@@ -85,8 +85,9 @@ export async function main(ns) {
       debug(`Ramcheck failed buying server`)
       let serverport = ns.exec("buyone.js", "home", 1, ram)
       await ns.getPortHandle(serverport).nextWrite()
-      return ns.asleep(5)
+      return ns.sleep(10)
     } else {
+      ns.sleep(10)
       return debug("Ramcheck Pass")
     }
   }
@@ -97,13 +98,13 @@ export async function main(ns) {
         ns.scp(["test/weaken.js", "test/grow.js"], ramhost[0], "home")
         endtime = Date.now() + weakentime;
         delay = 0
-        let GT = Math.ceil(ns.growthAnalyze(target, maxmoney / curmoney, 1));
-        let GTRam = Math.ceil(GT * grow.ramcost)
-        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
-        let WTRam = Math.ceil(WT * weak1.ramcost)
-        let WGT = Math.ceil(GT * 0.004 / weakenpower);
-        let WGTRam = Math.ceil(WGT * weak1.ramcost)
-        let reqram = GTRam + WTRam + WGTRam
+        const GT = Math.ceil(ns.growthAnalyze(target, maxmoney / curmoney, 1));
+        const GTRam = Math.ceil(GT * grow.ramcost)
+        const WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
+        const WTRam = Math.ceil(WT * weak1.ramcost)
+        const WGT = Math.ceil(GT * 0.004 / weakenpower);
+        const WGTRam = Math.ceil(WGT * weak1.ramcost)
+        const reqram = GTRam + WTRam + WGTRam
         debug(`Require Ram to run this batch:${ns.formatRam(reqram)}`)
         ns.print(WT) //Just for debugging
         if (!ns.fileExists(weak1.tool, ramhost[0])) {
@@ -160,8 +161,8 @@ export async function main(ns) {
         }
         endtime = Date.now() + weakentime;
         delay = 0
-        let WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
-        let WTRam = Math.ceil(WT * weak1.ramcost)
+        const WT = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target) + 0.0001) / weakenpower);
+        const WTRam = Math.ceil(WT * weak1.ramcost)
         ns.print(WT)
         await ramcheck(WTRam)
         ramsort()
@@ -189,15 +190,15 @@ export async function main(ns) {
       }
     } else {
       endtime = Date.now() + weakentime;
-      let HT = Math.floor(ns.hackAnalyzeThreads(target, hackamount));
-      let HTRam = Math.ceil(HT * hack.ramcost)
-      let GT = Math.ceil(ns.growthAnalyze(target, maxmoney / (maxmoney - maxmoney * yoink)), 1);
-      let GTRam = Math.ceil(GT * grow.ramcost)
-      let WHT = Math.ceil(HT * 0.002 / weakenpower);
-      let WHTRam = Math.ceil(WHT * weak1.ramcost)
-      let WGT = Math.ceil(GT * 0.004 / weakenpower);
-      let WGTRam = Math.ceil(WGT * weak1.ramcost)
-      let reqram = HTRam + GTRam + WHTRam + WGTRam
+      const HT = Math.floor(ns.hackAnalyzeThreads(target, hackamount));
+      const HTRam = Math.ceil(HT * hack.ramcost)
+      const GT = Math.ceil(ns.growthAnalyze(target, maxmoney / (maxmoney - maxmoney * yoink)), 1);
+      const GTRam = Math.ceil(GT * grow.ramcost)
+      const WHT = Math.ceil(HT * 0.002 / weakenpower);
+      const WHTRam = Math.ceil(WHT * weak1.ramcost)
+      const WGT = Math.ceil(GT * 0.004 / weakenpower);
+      const WGTRam = Math.ceil(WGT * weak1.ramcost)
+      const reqram = HTRam + GTRam + WHTRam + WGTRam
       debug(`Hack threads: ${HT} threads. Ram: ${ns.formatRam(HTRam)}`)
       debug(`Grow threads: ${GT} threads. Ram: ${ns.formatRam(GTRam)}`)
       debug(`Weaken hack threads: ${WHT} threads. Ram: ${ns.formatRam(WHTRam)}`)
@@ -266,6 +267,6 @@ export async function main(ns) {
         recalctime()
       }
     }
-  }
   await ns.asleep(controldelay)
+  }
 }
