@@ -29,6 +29,26 @@ export function placescript(ns, server, script, overwrite = false) {
 }
 
 /** @param {NS} ns */
+export function attemptroot(ns, target = "n00dles") {
+  if (ns.fileExists("BruteSSH.exe") == true) {
+    ns.brutessh(target)
+  };
+  if (ns.fileExists("FTPCrack.exe") == true) {
+    ns.ftpcrack(target)
+  };
+  if (ns.fileExists("relaySMTP.exe") == true) {
+    ns.relaysmtp(target)
+  };
+  if (ns.fileExists("HTTPWorm.exe") == true) {
+    ns.httpworm(target)
+  };
+  if (ns.fileExists("SQLInject.exe") == true) {
+    ns.sqlinject(target)
+  };
+  return ns.nuke(target)
+}
+
+/** @param {NS} ns */
 export function getnetwork(ns, lambdaCondition = () => true, hostname = "home", servers = [], visited = []) {
   if (visited.includes(hostname)) return;
   visited.push(hostname);
@@ -42,13 +62,13 @@ export function getnetwork(ns, lambdaCondition = () => true, hostname = "home", 
 
 /** @param {NS} ns */
 export function servercheck(ns, server, target = "n00dles", formula = false) {
-  if (!ns.hasRootAccess(server)) return target;
+  if (!ns.hasRootAccess(server) && !attemptroot(ns, server)) return target;
   const you = ns.getPlayer();
   const curserver = ns.getServer(server);
   const preserver = ns.getServer(target);
   let curserverpoint;
   let preserverpoint;
-  if (curserver.requiredHackingSkill <= you.skills.hacking / (formula ? 5 : 1)) {
+  if (curserver.requiredHackingSkill <= you.skills.hacking / (formula ? 1 : 2)) {
     if (formula) {
       curserver.hackDifficulty = curserver.minDifficulty;
       preserver.hackDifficulty = preserver.minDifficulty;
@@ -195,8 +215,10 @@ export async function prep(ns, data, ramhost) {
       }
       ns.print(`Estimated time remaining: ${ns.tFormat(tEnd - Date.now())}`);
       ns.print(`---------------------------------------------------`);
+      ns.print(`Target info:`)
       ns.print(`Target: ${data.target}`)
       ns.print(`┣━ Money: ${ns.formatNumber(data.money, 2, 1e3, true)}\$ / ${ns.formatNumber(data.maxMoney, 2, 1e3, true)}\$`)
+      ns.print(`┃  ┗━ Actual gain: ${ns.formatNumber(data.truegain)}\$`)
       ns.print(`┣━ Security: + ${(data.sec - data.minSec).toFixed(2)}`)
       ns.print(`┗━ Batch count: ${batchcount} ${(batchcount === 1) ? "batch" : "batches"}`)
       ns.print(`===================================================`);
@@ -204,7 +226,7 @@ export async function prep(ns, data, ramhost) {
     ns.atExit(() => clearInterval(timer));
 
     // Wait for the last weaken to finish.
-    do await dataPort.nextWrite(); while (!dataPort.read() === "pWeaken");
+    do await dataPort.nextWrite(); while (!dataPort.read() === String.prototype.startsWith("pWeaken"));
     clearInterval(timer);
     await ns.sleep(100);
   }
