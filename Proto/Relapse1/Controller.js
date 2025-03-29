@@ -23,7 +23,7 @@ export async function main(ns) {
   ns.disableLog(`ALL`);
   ns.print(`Debug?: ${debugmode}`)
   ns.ui.openTail();
-  ns.ui.resizeTail(500, 250)
+  ns.ui.resizeTail(495, 294)
 
   let batchcount = 0;
   while (true) {
@@ -67,6 +67,7 @@ export async function main(ns) {
     }
     const timer = setInterval(() => {
       ns.clearLog();
+      //ns.print(ns.self().tailProperties)
       if(debugmode) ns.print(`Debug enabled!`)
       ns.print(`===================================================`);
       ns.print(`Hacking \$${ns.formatNumber(data.maxMoney * data.yoink)} from ${data.target}`);
@@ -75,6 +76,7 @@ export async function main(ns) {
       ns.print(`Target info:`)
       ns.print(`Target: ${data.target}`)
       ns.print(`┣━ Money: ${ns.formatNumber(data.money, 2, 1e3, true)}\$ / ${ns.formatNumber(data.maxMoney, 2, 1e3, true)}\$`)
+      ns.print(`┃  ┗━ Actual gain: ${ns.formatNumber(data.truegain)}\$`)
       ns.print(`┣━ Security: + ${(data.sec - data.minSec).toFixed(2)}`)
       ns.print(`┗━ Batch count: ${batchcount}`)
       ns.print(`===================================================`);
@@ -118,6 +120,7 @@ class Data {
     this.delay = 0;
     this.spacer = 5;
     this.yoink = 0.2;
+    this.truegain = (this.maxMoney * this.yoink)* ns.getPlayer().mults.hacking_money
 
     this.times = { hack: 0, weaken1: 0, grow: 0, weaken2: 0 };
     this.ends = { hack: 0, weaken1: 0, grow: 0, weaken2: 0 };
