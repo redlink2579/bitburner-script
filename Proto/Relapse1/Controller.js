@@ -9,10 +9,17 @@ const tools = ["Proto/Relapse1/hack.js", "Proto/Relapse1/grow.js", "Proto/Relaps
 const use = { hack: "Proto/Relapse1/hack.js", weaken1: "Proto/Relapse1/weaken.js", grow: "Proto/Relapse1/grow.js", weaken2: "Proto/Relapse1/weaken.js" }
 const wages = { hack: 1.70, weaken1: 1.75, grow: 1.75, weaken2: 1.75 }
 const order = { hack: 0, weaken1: 1, grow: 2, weaken2: 3 }
+const filename = ns.args[0] ?? "dummy.txt"
+let mode = 0
+/* 
+   0 = Nothing happening, 
+   1 = Batching, 
+   2 = Prepping
+ */
 
 //Debug print stuff(see Utils.js file)
-const debugmode = false
-const debugtype = 1
+const debugmode = true
+const debugtype = 2
 export function debug(ns, string) {
   debugprint(ns, debugmode, string, debugtype)
 }
@@ -20,12 +27,17 @@ export function debug(ns, string) {
 //Main function
 /** @param {NS} ns */
 export async function main(ns) {
-  ns.disableLog(`ALL`);
   ns.print(`Debug?: ${debugmode}`)
-  ns.ui.openTail();
-  ns.ui.resizeTail(495, 294)
 
   let batchcount = 0;
+  let tuiport = null;
+  function writetofile(target) {
+    if(ns.fileExists(filename, home)) {
+      if (ns.read(filename).search(target) === target) {
+
+      }
+    }
+  }
   while (true) {
     const reportport = ns.getPortHandle(ns.pid);
     reportport.clear();
@@ -38,10 +50,22 @@ export async function main(ns) {
       return ns.hasRootAccess(server);
     });
     const ramhost = new RamHost(ns, network);
-    const data = new Data(ns, target);
-    if (!isPrepped(ns, target)) await   prep(ns, data, ramhost)
+    let data = new Data(ns, target);
+    if (tuiport == null) {
+      tuiport = ns.exec("/Proto/Relapse1/TUI.js", "home", { temporary: true })
+    }
+    let info = { mode: mode, target: target, yoink: data.yoink };
+    ns.writePort(tuiport, info)
+    while (!isPrepped(ns, target)) {
+      ns.clearPort(tuiport)
+      mode = 2
+      info.mode = mode
+      ns.writePort(tuiport, info)
+      await prep(ns, data, ramhost, info)
+      data = new Data(ns, target);
+    }
     optimizeBatch(ns, data, ramhost);
-    data.calculate(ns);
+    data.calculate(ns, ns.fileExists("Formulas.exe", "home"));
 
     const batch = [];
     batchcount++;
@@ -51,12 +75,13 @@ export async function main(ns) {
       work.batch = batchcount;
       if (!ramhost.assign(work)) {
         ns.print(`ERROR: Unable to assign ${job}. Dumping debug info`)
-        debug(ns, work);
-        debug(ns, data);
+        debug(ns, JSON.stringify(work));
+        debug(ns, JSON.stringify(data));
         ramhost.printhost(ns)
       }
       batch.push(work);
     }
+    debugger
     for (const work of batch) {
       work.end += data.delay;
       const workpid = ns.exec(use[work.job], work.host, { threads: work.threads, temporary: true }, JSON.stringify(work));
@@ -65,28 +90,12 @@ export async function main(ns) {
       await tport.nextWrite()
       data.delay += tport.read()
     }
-    const timer = setInterval(() => {
-      ns.clearLog();
-      //ns.print(ns.self().tailProperties)
-      if(debugmode) ns.print(`Debug enabled!`)
-      ns.print(`===================================================`);
-      ns.print(`Hacking \$${ns.formatNumber(data.maxMoney * data.yoink)} from ${data.target}`);
-      ns.print(`Running batch: ETA ${ns.tFormat(data.ends.weaken2 - Date.now())}`);
-      ns.print(`---------------------------------------------------`);
-      ns.print(`Target info:`)
-      ns.print(`Target: ${data.target}`)
-      ns.print(`┣━ Money: ${ns.formatNumber(data.money, 2, 1e3, true)}\$ / ${ns.formatNumber(data.maxMoney, 2, 1e3, true)}\$`)
-      ns.print(`┃  ┗━ Actual gain: ${ns.formatNumber(data.truegain)}\$`)
-      ns.print(`┣━ Security: + ${(data.sec - data.minSec).toFixed(2)}`)
-      ns.print(`┗━ Batch count: ${batchcount}`)
-      ns.print(`===================================================`);
-    });
-    ns.atExit(() => {
-      clearInterval(timer);
-    })
+    mode = 1;
+    info.mode = mode;
+    ns.clearPort(tuiport)
+    ns.writePort(tuiport, info)
     await reportport.nextWrite();
     reportport.clear();
-    clearInterval(timer);
   }
 }
 
@@ -120,7 +129,7 @@ class Data {
     this.delay = 0;
     this.spacer = 5;
     this.yoink = 0.2;
-    this.truegain = (this.maxMoney * this.yoink)* ns.getPlayer().mults.hacking_money
+    this.truegain = (this.maxMoney * this.yoink) * ns.getPlayer().mults.hacking_money
 
     this.times = { hack: 0, weaken1: 0, grow: 0, weaken2: 0 };
     this.ends = { hack: 0, weaken1: 0, grow: 0, weaken2: 0 };
@@ -130,23 +139,40 @@ class Data {
   }
 
   /** @param {NS} ns */
-  calculate(ns, yoink = this.yoink) {
+  calculate(ns, formula = false, yoink = this.yoink) {
     const server = this.target;
+    const servobj = ns.getServer(server);
+    const player = ns.getPlayer();
     const maxMoney = this.maxMoney;
     this.money = ns.getServerMoneyAvailable(server);
     this.sec = ns.getServerSecurityLevel(server);
-    this.wTime = ns.getWeakenTime(server);
+    this.wTime; this.times.hack; this.times.grow;
+
+    if (formula) {
+      this.wTime = ns.formulas.hacking.weakenTime(servobj, player);
+      this.times.hack = ns.formulas.hacking.hackTime(servobj, player);
+      this.times.grow = ns.formulas.hacking.growTime(servobj, player);
+    } else {
+      this.wTime = ns.getWeakenTime(server);
+      this.times.hack = this.wTime / 4;
+      this.times.grow = this.wTime * 0.8;
+    }
+
     this.times.weaken1 = this.wTime;
     this.times.weaken2 = this.wTime;
-    this.times.hack = this.wTime / 4;
-    this.times.grow = this.wTime * 0.8;
     this.depth = this.wTime / this.spacer * 4;
 
     const hPercent = ns.hackAnalyze(server);
     const amount = maxMoney * yoink;
     const hThreads = Math.max(Math.floor(ns.hackAnalyzeThreads(server, amount)), 1);
     const tyoink = hPercent * hThreads;
-    const gThreads = Math.ceil(ns.growthAnalyze(server, maxMoney / (maxMoney - maxMoney * tyoink)));
+    let gThreads;
+    if (formula) {
+      servobj.moneyAvailable = maxMoney - amount;
+      gThreads = ns.formulas.hacking.growThreads(servobj, player, maxMoney)
+    } else {
+      gThreads = Math.ceil(ns.growthAnalyze(server, maxMoney / (maxMoney - maxMoney * tyoink)));
+    }
     this.threads.weaken1 = Math.max(Math.ceil(hThreads * 0.002 / 0.05), 1);
     this.threads.weaken2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
     this.threads.hack = hThreads;
@@ -188,8 +214,8 @@ class RamHost {
 
   #sort() {
     this.#ramhosts.sort((x, y) => {
-      if (x.server === "home") return 1;
-      if (y.server === "home") return -1;
+      if (x.server === "home" || x.server.startsWith("share-serv")) return 1;
+      if (y.server === "home" || y.server.startsWith("share-serv")) return -1;
 
       return x.ram - y.ram
     })
@@ -220,7 +246,7 @@ class RamHost {
   }
 
   assign(Work) {
-    const ramhost = this.#ramhosts.find(ramhost => ramhost.ram >= Work.cost);
+    const ramhost = this.#ramhosts.find(ramhost => ramhost.ram >= Work.cost );
     if (ramhost) {
       Work.host = ramhost.server;
       ramhost.ram -= Work.cost;
