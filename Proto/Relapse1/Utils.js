@@ -45,7 +45,11 @@ export function attemptroot(ns, target = "n00dles") {
   if (ns.fileExists("SQLInject.exe") == true) {
     ns.sqlinject(target)
   };
-  return ns.nuke(target)
+  try {
+    return ns.nuke(target)
+  } catch (Error) {
+    return false
+  }
 }
 
 /** @param {NS} ns */
@@ -68,7 +72,7 @@ export function servercheck(ns, server, target = "n00dles", formula = false) {
   const preserver = ns.getServer(target);
   let curserverpoint;
   let preserverpoint;
-  if (curserver.requiredHackingSkill <= you.skills.hacking / (formula ? 1 : 2)) {
+  if (curserver.requiredHackingSkill <= you.skills.hacking / (formula ? 1 : 10)) {
     if (formula) {
       curserver.hackDifficulty = curserver.minDifficulty;
       preserver.hackDifficulty = preserver.minDifficulty;
@@ -114,12 +118,6 @@ export async function prep(ns, data, ramhost) {
     let gThreads = 0;
     let batchcount = 1;
     let script, mode;
-    /*
-    Mode:
-    1: Target Security
-    2: Target Money
-    3: Two birds
-    */
     if (money < maxMoney) {
       gThreads = Math.ceil(ns.growthAnalyze(data.target, maxMoney / money));
       wThreads2 = Math.ceil(ns.growthAnalyzeSecurity(gThreads) / 0.05);
@@ -131,10 +129,10 @@ export async function prep(ns, data, ramhost) {
         wThreads2 = 0;
         batchcount = Math.ceil(wThreads1 / totalThreads);
         if (batchcount > 1) wThreads1 = totalThreads;
-        mode = 1;
-      } else mode = 3;
+        mode = 2;
+      } else mode = 4;
     } else if (gThreads > maxThreads || gThreads + wThreads2 > totalThreads) {
-      mode = 2;
+      mode = 3;
       const oldG = gThreads
       wThreads2 = Math.max(Math.floor(totalThreads / 13.5), 1);
       gThreads = Math.floor(wThreads2 * 12.5);
@@ -199,35 +197,8 @@ export async function prep(ns, data, ramhost) {
         host.ram -= 1.75 * threads
       }
     }
-    const tEnd = ((mode === 0 ? wEnd1 : wEnd2) - Date.now()) * batchcount + Date.now();
-    const timer = setInterval(() => {
-      ns.clearLog();
-      ns.print(`===================================================`);
-      switch (mode) {
-        case 1:
-          ns.print(`Weakening security on ${data.target}...`);
-          break;
-        case 2:
-          ns.print(`Maximizing money on ${data.target}...`);
-          break;
-        case 3:
-          ns.print(`Finalizing preparation on ${data.target}...`);
-      }
-      ns.print(`Estimated time remaining: ${ns.tFormat(tEnd - Date.now())}`);
-      ns.print(`---------------------------------------------------`);
-      ns.print(`Target info:`)
-      ns.print(`Target: ${data.target}`)
-      ns.print(`┣━ Money: ${ns.formatNumber(data.money, 2, 1e3, true)}\$ / ${ns.formatNumber(data.maxMoney, 2, 1e3, true)}\$`)
-      ns.print(`┃  ┗━ Actual gain: ${ns.formatNumber(data.truegain)}\$`)
-      ns.print(`┣━ Security: + ${(data.sec - data.minSec).toFixed(2)}`)
-      ns.print(`┗━ Batch count: ${batchcount} ${(batchcount === 1) ? "batch" : "batches"}`)
-      ns.print(`===================================================`);
-    }, 200);
-    ns.atExit(() => clearInterval(timer));
-
     // Wait for the last weaken to finish.
     do await dataPort.nextWrite(); while (!dataPort.read() === String.prototype.startsWith("pWeaken"));
-    clearInterval(timer);
     await ns.sleep(100);
   }
   return true
