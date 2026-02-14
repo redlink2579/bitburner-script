@@ -15,8 +15,8 @@ export class RamHost {
         const maxRam = ns.getServerMaxRam(server);
         const ram = maxRam - ns.getServerUsedRam(server);
         if (ram >= 1.70) {
-          const ramhosts = { server: server, ram: ram }
-          this.#ramhosts.push(ramhosts);
+          const ramhost = { server: server, ram: ram }
+          this.#ramhosts.push(ramhost);
           if (ram < this.#minramsize) this.#minramsize = ram;
           if (ram > this.#maxramsize) this.#maxramsize = ram;
           this.#totalram += ram;
