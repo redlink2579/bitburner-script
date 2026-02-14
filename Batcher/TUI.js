@@ -1,61 +1,60 @@
-import { lazy, proto, shotgun } from "Batcher/libs/module.js"
+import * as module from "Batcher/libs/module.js"
 /** @param {NS} ns */
 export async function main(ns) {
   const refreshrate = 1000;
   const port = ns.getPortHandle(ns.pid);
   const working = ns.args[1] ?? false
   let timer = 0
-  let info = port.peek()
-  let mode = info.mode ?? 0;
-  let target = info.target ?? `home`;
-  let yoink = info.yoink ?? 0.20;
+  let portdata = port.peek()
+  let mode = portdata.mode ?? 0;
+  let target = portdata.target ?? `home`;
+  let yoink = portdata.yoink ?? 0.20;
   let data = new Data(ns, target);
+  let info = { mode, target, yoink, data };
 
-  function updateinfo() {
+  function updatedata() {
     if (working) {
-      info = port.peek();
-      mode = info.mode;
-      yoink = info.yoink;
-      target = info.target;
+      portdata = port.peek();
+      mode = portdata.mode;
+      yoink = portdata.yoink;
+      target = portdata.target;
       data = new Data(ns, target);
+      info = { mode, target, yoink, data };
     }
   }
 
-  const thedot = [`.`, `..`, `...`]
-  let dot = 0
-
-  const name = [`Nothing happening`, `Batching ${target}`, `Shotgunning ${target}`]
-  const uiwidth = [385, 372]
-  const uiheight = [455, 250]
-  const selection = ns.args[0] ?? 0
+  let dot = { thedot: [`.`, `..`, `...`], index: 0 };
+  const name = { lazy: `Nothing happening`, proto: `Batching ${target}`, shotgun: `Shotgunning ${target}` }
+  const uiwidth = { lazy: 385, proto: 372 }
+  const uiheight = { lazy: 455, proto: 250 }
+  const modulePointer = ns.args[0] ?? `lazy`
 
   function display() {
-    if (selection == 0) {
-      lazy(ns, thedot, dot, timer)
-    } else if (selection == 1) {
-      proto(ns, mode, target, data, yoink, timer, thedot, dot)
-    }
+    module[modulePointer](ns, info, dot, timer)
   }
-
   ns.disableLog(`ALL`)
   ns.ui.openTail()
-  ns.ui.resizeTail(uiwidth[selection], uiheight[selection])
-  ns.ui.setTailTitle(name[selection])
+  ns.ui.resizeTail(uiwidth[modulePointer], uiheight[modulePointer])
+  ns.ui.setTailTitle(name[modulePointer])
+  let lastTarget = ""
+  debugger
   while (true) {
     ns.clearLog();
-    //ns.print(ns.self().tailProperties)
+    //ns.print(ns.self().tailProperties) //only needed for calibating the ui size
     display()
     await ns.asleep(refreshrate)
-    updateinfo()
+    updatedata()
     timer = timer + refreshrate
     debugger
-    dot++
-    if (dot > 2) {
-      dot = 0
+    dot.index++
+    if (lastTarget != target) {
+      ns.ui.setTailTitle(name[modulePointer])
+    } else lastTarget = target
+    if (dot.index > 2) {
+      dot.index = 0
     }
   }
 }
-
 class Data {
   /** @param {NS} ns */
   constructor(ns, target) {
